@@ -17,9 +17,12 @@ jobs:
   data-prep:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Install Dependencies
-        run: pip install -r self_paced_courses_1_mlops/requirements.txt
+        run: pip install -r self_paced_courses_1_mlops/deployment/requirements.txt
       - name: Run Data Preparation
         run: python self_paced_courses_1_mlops/model_building/prep.py
       - name: Commit and push processed data
@@ -34,9 +37,14 @@ jobs:
     needs: data-prep
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
       - name: Install Dependencies
-        run: pip install -r self_paced_courses_1_mlops/requirements.txt
+        run: pip install -r self_paced_courses_1_mlops/deployment/requirements.txt
       - name: Model Building
         run: python self_paced_courses_1_mlops/model_building/train.py
       - name: Commit and push trained model
@@ -46,4 +54,3 @@ jobs:
           git add self_paced_courses_1_mlops/deployment/model/*.joblib
           git diff --cached --quiet || git commit -m "Add trained model [skip ci]"
           git push
-```
