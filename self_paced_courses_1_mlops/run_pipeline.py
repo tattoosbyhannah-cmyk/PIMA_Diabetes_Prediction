@@ -10,8 +10,8 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from huggingface_hub import HfApi
 
-# --- 1. DATA PREPARATION ---
-DATA_DIR = "self_paced_courses_1_mlops/data"
+# Target directory directly inside the repository
+DATA_DIR = "/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/data"
 DATASET_PATH = os.path.join(DATA_DIR, "pima.csv")
 
 print("--- Step 1: Loading and Preparing Data ---")
@@ -34,7 +34,7 @@ print(f"Train/test splits successfully written to {DATA_DIR}/")
 
 # --- 2. MODEL TRAINING ---
 print("\n--- Step 2: Training Model ---")
-MODEL_DIR = "self_paced_courses_1_mlops/deployment/model"
+MODEL_DIR = "/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/deployment/model"
 
 numeric_features = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']
 preprocessor = make_column_transformer((StandardScaler(), numeric_features))
@@ -54,26 +54,22 @@ best_model = grid_search.best_estimator_
 print("Best Params Found:\n", grid_search.best_params_)
 
 y_pred_test = best_model.predict(Xtest)
-print("\nTest Classification Report:")
-print(classification_report(ytest, y_pred_test))
+print("\nTest Classification Report:\n", classification_report(ytest, y_pred_test))
 
 os.makedirs(MODEL_DIR, exist_ok=True)
 model_path = os.path.join(MODEL_DIR, "best_pima_diabetes_model_v1.joblib")
 joblib.dump(best_model, model_path)
 print(f"Model saved to {model_path}")
 
-# --- 3. UPLOAD TO HUGGING FACE (Optional Trigger) ---
-# This will execute if HF_TOKEN is present in the environment (e.g., inside GitHub Actions)
+# --- 3. UPLOAD TO HUGGING FACE ---
 token = os.environ.get("HF_TOKEN")
 if token:
     print("\n--- Step 3: Uploading Deployment Folder to Hugging Face ---")
     api = HfApi(token=token)
     api.upload_folder(
-        folder_path="self_paced_courses_1_mlops/deployment",
+        folder_path="/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/deployment",
         repo_id=os.environ.get("HF_SPACE_ID", "hannahmcowan/PIMA_Diabetes_Prediction"),
         repo_type="space",
         delete_patterns=["src/*"],
     )
-    print("Deployment folder uploaded successfully to Hugging Face Space!")
-else:
-    print("\nSkipping Step 3 (HF_TOKEN not found in environment). Run this script inside GitHub Actions to trigger deployment.")
+    print("Deployment folder uploaded successfully!")
