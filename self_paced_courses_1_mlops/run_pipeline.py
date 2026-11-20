@@ -10,8 +10,11 @@ from sklearn.model_selection import GridSearchCV
 from sklearn.metrics import classification_report
 from huggingface_hub import HfApi
 
-# Target directory directly inside the repository
-DATA_DIR = "/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/data"
+# Dynamically locate the script's directory to ensure portability across local environment and GitHub Actions
+BASE_DIR = os.path.dirname(os.path.abspath(__file__))
+
+# Set paths relative to the script location
+DATA_DIR = os.path.join(BASE_DIR, "data")
 DATASET_PATH = os.path.join(DATA_DIR, "pima.csv")
 
 print("--- Step 1: Loading and Preparing Data ---")
@@ -34,7 +37,7 @@ print(f"Train/test splits successfully written to {DATA_DIR}/")
 
 # --- 2. MODEL TRAINING ---
 print("\n--- Step 2: Training Model ---")
-MODEL_DIR = "/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/deployment/model"
+MODEL_DIR = os.path.join(BASE_DIR, "deployment", "model")
 
 numeric_features = ['preg', 'plas', 'pres', 'skin', 'test', 'mass', 'pedi', 'age']
 preprocessor = make_column_transformer((StandardScaler(), numeric_features))
@@ -67,7 +70,7 @@ if token:
     print("\n--- Step 3: Uploading Deployment Folder to Hugging Face ---")
     api = HfApi(token=token)
     api.upload_folder(
-        folder_path="/content/PIMA_Diabetes_Prediction/self_paced_courses_1_mlops/deployment",
+        folder_path=os.path.join(BASE_DIR, "deployment"),
         repo_id=os.environ.get("HF_SPACE_ID", "hannahmcowan/PIMA_Diabetes_Prediction"),
         repo_type="space",
         delete_patterns=["src/*"],
