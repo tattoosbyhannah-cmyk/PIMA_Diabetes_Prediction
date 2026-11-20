@@ -6,6 +6,8 @@ on:
       - main
     paths:
       - 'self_paced_courses_1_mlops/model_building/**'
+      - 'self_paced_courses_1_mlops/deployment/**'
+      - 'self_paced_courses_1_mlops/hosting/**'
       - 'self_paced_courses_1_mlops/data/pima.csv'
   workflow_dispatch:
 
@@ -54,3 +56,21 @@ jobs:
           git add self_paced_courses_1_mlops/deployment/model/*.joblib
           git diff --cached --quiet || git commit -m "Add trained model [skip ci]"
           git push
+
+  deploy-to-huggingface:
+    needs: model-training
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+      - name: Install Dependencies
+        run: pip install huggingface_hub
+      - name: Upload deployment folder to Hugging Face Space
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          HF_SPACE_ID: hannahmcowan/PIMA_Diabetes_Prediction
+        run: python self_paced_courses_1_mlops/hosting/hosting.py
